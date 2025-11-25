@@ -1,0 +1,34 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72": {
+      "displayName": "UserServiceFunction/Code",
+      "source": {
+        "path": "asset.633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-current_region-692a5352": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72.zip",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    },
+    "7948ca76614c679750b48bbd5a9299539883ffe4a5ad198a634f94d80999ec75": {
+      "displayName": "QaLiteStack Template",
+      "source": {
+        "path": "QaLiteStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-current_region-a28c0f4b": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
+          "objectKey": "7948ca76614c679750b48bbd5a9299539883ffe4a5ad198a634f94d80999ec75.json",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

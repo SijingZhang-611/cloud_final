@@ -1,0 +1,3414 @@
+{
+ "Resources": {
+  "UsersTable9725E9C8": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "userId",
+      "KeyType": "HASH"
+     }
+    ],
+    "TableName": "UsersTable"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/UsersTable/Resource"
+   }
+  },
+  "QuestionsTable14A8B4AD": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "questionId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "questionId",
+      "KeyType": "HASH"
+     }
+    ],
+    "TableName": "QuestionsTable"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QuestionsTable/Resource"
+   }
+  },
+  "AnswersTable2C1915A4": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "answerId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "questionId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "QuestionIdIndex",
+      "KeySchema": [
+       {
+        "AttributeName": "questionId",
+        "KeyType": "HASH"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "answerId",
+      "KeyType": "HASH"
+     }
+    ],
+    "TableName": "AnswersTable"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/AnswersTable/Resource"
+   }
+  },
+  "UserServiceFunctionServiceRole97E4A3A4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/UserServiceFunction/ServiceRole/Resource"
+   }
+  },
+  "UserServiceFunctionServiceRoleDefaultPolicyEB0C98B9": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "UsersTable9725E9C8",
+          "Arn"
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "UserServiceFunctionServiceRoleDefaultPolicyEB0C98B9",
+    "Roles": [
+     {
+      "Ref": "UserServiceFunctionServiceRole97E4A3A4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/UserServiceFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "UserServiceFunctionE37B31D4": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "USERS_TABLE": {
+       "Ref": "UsersTable9725E9C8"
+      }
+     }
+    },
+    "FunctionName": "UserServiceFunction",
+    "Handler": "user_service.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "UserServiceFunctionServiceRole97E4A3A4",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "UserServiceFunctionServiceRoleDefaultPolicyEB0C98B9",
+    "UserServiceFunctionServiceRole97E4A3A4"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/UserServiceFunction/Resource",
+    "aws:asset:path": "asset.633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "QuestionServiceFunctionServiceRoleAB27AF9A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QuestionServiceFunction/ServiceRole/Resource"
+   }
+  },
+  "QuestionServiceFunctionServiceRoleDefaultPolicy7F64C31A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "QuestionsTable14A8B4AD",
+          "Arn"
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "QuestionServiceFunctionServiceRoleDefaultPolicy7F64C31A",
+    "Roles": [
+     {
+      "Ref": "QuestionServiceFunctionServiceRoleAB27AF9A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QuestionServiceFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "QuestionServiceFunctionEB6AAF03": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "QUESTIONS_TABLE": {
+       "Ref": "QuestionsTable14A8B4AD"
+      }
+     }
+    },
+    "FunctionName": "QuestionServiceFunction",
+    "Handler": "question_service.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionServiceRoleAB27AF9A",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "QuestionServiceFunctionServiceRoleDefaultPolicy7F64C31A",
+    "QuestionServiceFunctionServiceRoleAB27AF9A"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QuestionServiceFunction/Resource",
+    "aws:asset:path": "asset.633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "AnswerServiceFunctionServiceRole4C35287B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/AnswerServiceFunction/ServiceRole/Resource"
+   }
+  },
+  "AnswerServiceFunctionServiceRoleDefaultPolicyCC71D13C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "AnswersTable2C1915A4",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "AnswersTable2C1915A4",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AnswerServiceFunctionServiceRoleDefaultPolicyCC71D13C",
+    "Roles": [
+     {
+      "Ref": "AnswerServiceFunctionServiceRole4C35287B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/AnswerServiceFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "AnswerServiceFunction35132131": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "ANSWERS_TABLE": {
+       "Ref": "AnswersTable2C1915A4"
+      }
+     }
+    },
+    "FunctionName": "AnswerServiceFunction",
+    "Handler": "answer_service.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunctionServiceRole4C35287B",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "AnswerServiceFunctionServiceRoleDefaultPolicyCC71D13C",
+    "AnswerServiceFunctionServiceRole4C35287B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/AnswerServiceFunction/Resource",
+    "aws:asset:path": "asset.633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "BrowseServiceFunctionServiceRoleFF1BD35F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/BrowseServiceFunction/ServiceRole/Resource"
+   }
+  },
+  "BrowseServiceFunctionServiceRoleDefaultPolicy7676182A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "QuestionsTable14A8B4AD",
+          "Arn"
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BrowseServiceFunctionServiceRoleDefaultPolicy7676182A",
+    "Roles": [
+     {
+      "Ref": "BrowseServiceFunctionServiceRoleFF1BD35F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/BrowseServiceFunction/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "BrowseServiceFunctionF2EC7D4D": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "QUESTIONS_TABLE": {
+       "Ref": "QuestionsTable14A8B4AD"
+      }
+     }
+    },
+    "FunctionName": "BrowseServiceFunction",
+    "Handler": "browse_service.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionServiceRoleFF1BD35F",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "BrowseServiceFunctionServiceRoleDefaultPolicy7676182A",
+    "BrowseServiceFunctionServiceRoleFF1BD35F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/BrowseServiceFunction/Resource",
+    "aws:asset:path": "asset.633c57bd43feac85a7ab2ca90b2f22fe02e3b89bbe0fa2e4cad0c59366ac6a72",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "QaLiteApi17A76389": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Name": "QaLiteApi"
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Resource"
+   }
+  },
+  "QaLiteApiCloudWatchRole8ED3EA81": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/CloudWatchRole/Resource"
+   }
+  },
+  "QaLiteApiAccount988CB84F": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "QaLiteApiCloudWatchRole8ED3EA81",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "QaLiteApi17A76389"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Account"
+   }
+  },
+  "QaLiteApiDeployment98F40ADCc30e6c34b2bd73e1281cb63ed2eb3ca3": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "Automatically created by the RestApi construct",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "DependsOn": [
+    "QaLiteApianswersidOPTIONS7E4683B8",
+    "QaLiteApianswersid023D7BB2",
+    "QaLiteApianswersidvoteOPTIONSC1E88B98",
+    "QaLiteApianswersidvotePOST60FBCE42",
+    "QaLiteApianswersidvote5B11CA63",
+    "QaLiteApianswersOPTIONS69C2107D",
+    "QaLiteApianswersEAEE1CD2",
+    "QaLiteApibrowselatestGET1E81C5DD",
+    "QaLiteApibrowselatestOPTIONSB7BF48A2",
+    "QaLiteApibrowselatest464D2210",
+    "QaLiteApibrowseOPTIONSF0BB126F",
+    "QaLiteApibrowse8C9BA9E6",
+    "QaLiteApibrowsesearchGET60B706AC",
+    "QaLiteApibrowsesearchOPTIONS6902C5BE",
+    "QaLiteApibrowsesearchC09AE715",
+    "QaLiteApibrowsetopGETDC084C89",
+    "QaLiteApibrowsetopOPTIONSCF547654",
+    "QaLiteApibrowsetop5FF15B25",
+    "QaLiteApiOPTIONS608D1A1B",
+    "QaLiteApiquestionsidanswersGET95D80BC8",
+    "QaLiteApiquestionsidanswersOPTIONS268B3664",
+    "QaLiteApiquestionsidanswersPOST0E40EDB4",
+    "QaLiteApiquestionsidanswers560430EE",
+    "QaLiteApiquestionsidGETBE12F3F1",
+    "QaLiteApiquestionsidOPTIONS7E6AB658",
+    "QaLiteApiquestionsid4A46A5C4",
+    "QaLiteApiquestionsidvoteOPTIONS2B8D7E0B",
+    "QaLiteApiquestionsidvotePOST09D3AED8",
+    "QaLiteApiquestionsidvote3AD258D8",
+    "QaLiteApiquestionsGET61314B87",
+    "QaLiteApiquestionsOPTIONS4741E73B",
+    "QaLiteApiquestionsPOSTE17838BC",
+    "QaLiteApiquestions17D1EAE2",
+    "QaLiteApiusersidGET69BB6CDA",
+    "QaLiteApiusersidOPTIONSA4AA9877",
+    "QaLiteApiusersid040A417D",
+    "QaLiteApiusersOPTIONS4DB76574",
+    "QaLiteApiusersPOSTCD765601",
+    "QaLiteApiusers7251973D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "QaLiteApiDeploymentStageprod1DE4353C": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "QaLiteApiDeployment98F40ADCc30e6c34b2bd73e1281cb63ed2eb3ca3"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "QaLiteApiAccount988CB84F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "QaLiteApiOPTIONS608D1A1B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "QaLiteApi17A76389",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiusers7251973D": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "QaLiteApi17A76389",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "users",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/Resource"
+   }
+  },
+  "QaLiteApiusersOPTIONS4DB76574": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiusers7251973D"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiusersPOSTApiPermissionQaLiteStackQaLiteApi0777AE43POSTusers5AEE44DE": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "UserServiceFunctionE37B31D4",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/POST/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/POST/ApiPermission.QaLiteStackQaLiteApi0777AE43.POST..users"
+   }
+  },
+  "QaLiteApiusersPOSTApiPermissionTestQaLiteStackQaLiteApi0777AE43POSTusersA351E58A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "UserServiceFunctionE37B31D4",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/POST/users"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/POST/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.POST..users"
+   }
+  },
+  "QaLiteApiusersPOSTCD765601": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "UserServiceFunctionE37B31D4",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiusers7251973D"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/POST/Resource"
+   }
+  },
+  "QaLiteApiusersid040A417D": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApiusers7251973D"
+    },
+    "PathPart": "{id}",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/{id}/Resource"
+   }
+  },
+  "QaLiteApiusersidOPTIONSA4AA9877": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiusersid040A417D"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/{id}/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiusersidGETApiPermissionQaLiteStackQaLiteApi0777AE43GETusersidC5F31F13": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "UserServiceFunctionE37B31D4",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/{id}/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..users.{id}"
+   }
+  },
+  "QaLiteApiusersidGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETusersid7BAFCCCB": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "UserServiceFunctionE37B31D4",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/users/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/{id}/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..users.{id}"
+   }
+  },
+  "QaLiteApiusersidGET69BB6CDA": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "UserServiceFunctionE37B31D4",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiusersid040A417D"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/users/{id}/GET/Resource"
+   }
+  },
+  "QaLiteApiquestions17D1EAE2": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "QaLiteApi17A76389",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "questions",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/Resource"
+   }
+  },
+  "QaLiteApiquestionsOPTIONS4741E73B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiquestions17D1EAE2"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiquestionsPOSTApiPermissionQaLiteStackQaLiteApi0777AE43POSTquestions58FE440A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/POST/questions"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/POST/ApiPermission.QaLiteStackQaLiteApi0777AE43.POST..questions"
+   }
+  },
+  "QaLiteApiquestionsPOSTApiPermissionTestQaLiteStackQaLiteApi0777AE43POSTquestions9FDD8B80": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/POST/questions"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/POST/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.POST..questions"
+   }
+  },
+  "QaLiteApiquestionsPOSTE17838BC": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "QuestionServiceFunctionEB6AAF03",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestions17D1EAE2"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/POST/Resource"
+   }
+  },
+  "QaLiteApiquestionsGETApiPermissionQaLiteStackQaLiteApi0777AE43GETquestions09FB132E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/questions"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..questions"
+   }
+  },
+  "QaLiteApiquestionsGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETquestions4F230995": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/questions"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..questions"
+   }
+  },
+  "QaLiteApiquestionsGET61314B87": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "QuestionServiceFunctionEB6AAF03",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestions17D1EAE2"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/GET/Resource"
+   }
+  },
+  "QaLiteApiquestionsid4A46A5C4": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApiquestions17D1EAE2"
+    },
+    "PathPart": "{id}",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/Resource"
+   }
+  },
+  "QaLiteApiquestionsidOPTIONS7E6AB658": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsid4A46A5C4"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiquestionsidGETApiPermissionQaLiteStackQaLiteApi0777AE43GETquestionsid6D9F7F3B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/questions/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..questions.{id}"
+   }
+  },
+  "QaLiteApiquestionsidGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETquestionsid6EADE546": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/questions/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..questions.{id}"
+   }
+  },
+  "QaLiteApiquestionsidGETBE12F3F1": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "QuestionServiceFunctionEB6AAF03",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsid4A46A5C4"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/GET/Resource"
+   }
+  },
+  "QaLiteApiquestionsidvote3AD258D8": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApiquestionsid4A46A5C4"
+    },
+    "PathPart": "vote",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/vote/Resource"
+   }
+  },
+  "QaLiteApiquestionsidvoteOPTIONS2B8D7E0B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsidvote3AD258D8"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/vote/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiquestionsidvotePOSTApiPermissionQaLiteStackQaLiteApi0777AE43POSTquestionsidvoteA163CD35": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/POST/questions/*/vote"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/vote/POST/ApiPermission.QaLiteStackQaLiteApi0777AE43.POST..questions.{id}.vote"
+   }
+  },
+  "QaLiteApiquestionsidvotePOSTApiPermissionTestQaLiteStackQaLiteApi0777AE43POSTquestionsidvote640E740A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "QuestionServiceFunctionEB6AAF03",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/POST/questions/*/vote"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/vote/POST/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.POST..questions.{id}.vote"
+   }
+  },
+  "QaLiteApiquestionsidvotePOST09D3AED8": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "QuestionServiceFunctionEB6AAF03",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsidvote3AD258D8"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/vote/POST/Resource"
+   }
+  },
+  "QaLiteApiquestionsidanswers560430EE": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApiquestionsid4A46A5C4"
+    },
+    "PathPart": "answers",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/Resource"
+   }
+  },
+  "QaLiteApiquestionsidanswersOPTIONS268B3664": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsidanswers560430EE"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApiquestionsidanswersGETApiPermissionQaLiteStackQaLiteApi0777AE43GETquestionsidanswers08F17AC0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/questions/*/answers"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..questions.{id}.answers"
+   }
+  },
+  "QaLiteApiquestionsidanswersGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETquestionsidanswers0CFF98E3": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/questions/*/answers"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..questions.{id}.answers"
+   }
+  },
+  "QaLiteApiquestionsidanswersGET95D80BC8": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "AnswerServiceFunction35132131",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsidanswers560430EE"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/GET/Resource"
+   }
+  },
+  "QaLiteApiquestionsidanswersPOSTApiPermissionQaLiteStackQaLiteApi0777AE43POSTquestionsidanswers1B11F45C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/POST/questions/*/answers"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/POST/ApiPermission.QaLiteStackQaLiteApi0777AE43.POST..questions.{id}.answers"
+   }
+  },
+  "QaLiteApiquestionsidanswersPOSTApiPermissionTestQaLiteStackQaLiteApi0777AE43POSTquestionsidanswers3C26CD5C": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/POST/questions/*/answers"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/POST/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.POST..questions.{id}.answers"
+   }
+  },
+  "QaLiteApiquestionsidanswersPOST0E40EDB4": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "AnswerServiceFunction35132131",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApiquestionsidanswers560430EE"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/questions/{id}/answers/POST/Resource"
+   }
+  },
+  "QaLiteApianswersEAEE1CD2": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "QaLiteApi17A76389",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "answers",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/Resource"
+   }
+  },
+  "QaLiteApianswersOPTIONS69C2107D": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApianswersEAEE1CD2"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApianswersid023D7BB2": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApianswersEAEE1CD2"
+    },
+    "PathPart": "{id}",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/Resource"
+   }
+  },
+  "QaLiteApianswersidOPTIONS7E4683B8": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApianswersid023D7BB2"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApianswersidvote5B11CA63": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApianswersid023D7BB2"
+    },
+    "PathPart": "vote",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/vote/Resource"
+   }
+  },
+  "QaLiteApianswersidvoteOPTIONSC1E88B98": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApianswersidvote5B11CA63"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/vote/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApianswersidvotePOSTApiPermissionQaLiteStackQaLiteApi0777AE43POSTanswersidvoteE0108634": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/POST/answers/*/vote"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/vote/POST/ApiPermission.QaLiteStackQaLiteApi0777AE43.POST..answers.{id}.vote"
+   }
+  },
+  "QaLiteApianswersidvotePOSTApiPermissionTestQaLiteStackQaLiteApi0777AE43POSTanswersidvote043F1227": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AnswerServiceFunction35132131",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/POST/answers/*/vote"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/vote/POST/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.POST..answers.{id}.vote"
+   }
+  },
+  "QaLiteApianswersidvotePOST60FBCE42": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "AnswerServiceFunction35132131",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApianswersidvote5B11CA63"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/answers/{id}/vote/POST/Resource"
+   }
+  },
+  "QaLiteApibrowse8C9BA9E6": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "QaLiteApi17A76389",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "browse",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/Resource"
+   }
+  },
+  "QaLiteApibrowseOPTIONSF0BB126F": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApibrowse8C9BA9E6"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApibrowselatest464D2210": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApibrowse8C9BA9E6"
+    },
+    "PathPart": "latest",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/latest/Resource"
+   }
+  },
+  "QaLiteApibrowselatestOPTIONSB7BF48A2": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApibrowselatest464D2210"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/latest/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApibrowselatestGETApiPermissionQaLiteStackQaLiteApi0777AE43GETbrowselatest5D5AD157": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/browse/latest"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/latest/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..browse.latest"
+   }
+  },
+  "QaLiteApibrowselatestGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETbrowselatestD83ECC6A": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/browse/latest"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/latest/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..browse.latest"
+   }
+  },
+  "QaLiteApibrowselatestGET1E81C5DD": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "BrowseServiceFunctionF2EC7D4D",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApibrowselatest464D2210"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/latest/GET/Resource"
+   }
+  },
+  "QaLiteApibrowsetop5FF15B25": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApibrowse8C9BA9E6"
+    },
+    "PathPart": "top",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/top/Resource"
+   }
+  },
+  "QaLiteApibrowsetopOPTIONSCF547654": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApibrowsetop5FF15B25"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/top/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApibrowsetopGETApiPermissionQaLiteStackQaLiteApi0777AE43GETbrowsetopDE2B1B11": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/browse/top"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/top/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..browse.top"
+   }
+  },
+  "QaLiteApibrowsetopGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETbrowsetop94C53F54": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/browse/top"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/top/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..browse.top"
+   }
+  },
+  "QaLiteApibrowsetopGETDC084C89": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "BrowseServiceFunctionF2EC7D4D",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApibrowsetop5FF15B25"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/top/GET/Resource"
+   }
+  },
+  "QaLiteApibrowsesearchC09AE715": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "QaLiteApibrowse8C9BA9E6"
+    },
+    "PathPart": "search",
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/search/Resource"
+   }
+  },
+  "QaLiteApibrowsesearchOPTIONS6902C5BE": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "QaLiteApibrowsesearchC09AE715"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/search/OPTIONS/Resource"
+   }
+  },
+  "QaLiteApibrowsesearchGETApiPermissionQaLiteStackQaLiteApi0777AE43GETbrowsesearch3AB819F6": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/",
+       {
+        "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+       },
+       "/GET/browse/search"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/search/GET/ApiPermission.QaLiteStackQaLiteApi0777AE43.GET..browse.search"
+   }
+  },
+  "QaLiteApibrowsesearchGETApiPermissionTestQaLiteStackQaLiteApi0777AE43GETbrowsesearch7FBD0431": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "BrowseServiceFunctionF2EC7D4D",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:",
+       {
+        "Ref": "AWS::Region"
+       },
+       ":",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":",
+       {
+        "Ref": "QaLiteApi17A76389"
+       },
+       "/test-invoke-stage/GET/browse/search"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/search/GET/ApiPermission.Test.QaLiteStackQaLiteApi0777AE43.GET..browse.search"
+   }
+  },
+  "QaLiteApibrowsesearchGET60B706AC": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:",
+        {
+         "Ref": "AWS::Region"
+        },
+        ":lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "BrowseServiceFunctionF2EC7D4D",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "QaLiteApibrowsesearchC09AE715"
+    },
+    "RestApiId": {
+     "Ref": "QaLiteApi17A76389"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/QaLiteApi/Default/browse/search/GET/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/02OQW+DMAyFf0vvIVvhsDPdtNs0RHevTPBoCkkQdoRQlP8+JXRqT++zn/3sUpblUb4eYKVC9WMx6U6GM4MaBax0Cf1mwbi+k+EHugnF+6/NEMUEputBhk9vFWtnk/XMDS5GE2lno9BgZGjdvp+1cZNWW57LFAVVFyBCJlknEVTJk1cj8gkIBcx6AMYVNhlaJK5nnbMeWCvlvGXxgfPkNoOWU/epOjMM+YEdWiTnF4U5/gv56vpk3unfvR/JHOOjnX9MQdoOaebb8+w5imbjq7MvlTyW8u1wI62LxVvWBmW76x+g0x6HcgEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "QaLiteStack/CDKMetadata/Default"
+   },
+   "Condition": "CDKMetadataAvailable"
+  }
+ },
+ "Outputs": {
+  "QaLiteApiEndpoint5952D1A2": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "QaLiteApi17A76389"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "ApiUrl": {
+   "Description": "Base URL of the Q&A Lite API",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "QaLiteApi17A76389"
+      },
+      ".execute-api.",
+      {
+       "Ref": "AWS::Region"
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "QaLiteApiDeploymentStageprod1DE4353C"
+      },
+      "/"
+     ]
+    ]
+   }
+  }
+ },
+ "Conditions": {
+  "CDKMetadataAvailable": {
+   "Fn::Or": [
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "af-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-northeast-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-south-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-3"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ap-southeast-4"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "ca-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "cn-northwest-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-central-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-north-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-south-2"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Or": [
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "eu-west-3"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "il-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-central-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "me-south-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "sa-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-1"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-east-2"
+       ]
+      },
+      {
+       "Fn::Equals": [
+        {
+         "Ref": "AWS::Region"
+        },
+        "us-west-1"
+       ]
+      }
+     ]
+    },
+    {
+     "Fn::Equals": [
+      {
+       "Ref": "AWS::Region"
+      },
+      "us-west-2"
+     ]
+    }
+   ]
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
